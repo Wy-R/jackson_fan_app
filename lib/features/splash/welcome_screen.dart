@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../home/home_page.dart';
+import '../shell/home_shell.dart';
 
 /// 开屏欢迎页:全屏背景图 + enter 按钮,点击后进入首页。
 ///
@@ -42,10 +42,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     // push      = 往栈顶压一个新页面(能返回上一页)
     // pushReplacement = 用新页面替换掉当前页面(当前页被销毁,无法返回)
     // 开屏页进首页后不该能退回开屏,所以用 pushReplacement。
+    // 开屏进入后由 HomeShell 承载底部导航,默认停在首页 tab。
     Navigator.of(context).pushReplacement(
       // MaterialPageRoute 定义"一条路由",即怎么过渡到新页面,
       // builder 回调返回目标页面 Widget。下划线 _ 表示这个参数用不到。
-      MaterialPageRoute(builder: (_) => const HomePage()),
+      MaterialPageRoute(builder: (_) => const HomeShell()),
     );
   }
 
