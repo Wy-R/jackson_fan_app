@@ -4,12 +4,17 @@ import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/date_formatter.dart';
 import '../../../core/widgets/entrance_animation.dart';
+import '../../../core/widgets/tab_switcher.dart';
 
 const dailyContent = [
   'I never needed you to love me',
   'I just wanted you near me.',
 ];
+
+/// 底部导航中「每日」tab 的索引(首页0/音乐1/巡演2/每日3/我的4)。
+const _dailyTabIndex = 3;
 
 /// 今日一言悬浮卡:顶部浮动的引文卡片(毛玻璃效果)。
 ///
@@ -20,7 +25,15 @@ class DailyQuoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return EntranceAnimation(child: _buildCard(context));
+    return EntranceAnimation(
+      // 点击整张卡 → 切到「每日」tab。
+      // behavior.opaque 让透明区域(毛玻璃半透明处)也能响应点击。
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => TabSwitcher.of(context).switchTo(_dailyTabIndex),
+        child: _buildCard(context),
+      ),
+    );
   }
 
   /// 卡片本体(毛玻璃外框 + 内容)。
@@ -55,13 +68,21 @@ class DailyQuoteCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Text(
-                    '测试',
-                    style: TextStyle(
-                      color: AppColors.mutedForeground,
-                      fontSize: 9,
-                    ),
-                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        formatMonthDay(DateTime.now()), // 系统当前日期,格式如 "JUN 19"
+                        style: const TextStyle(
+                          fontFamily: 'Barlow Condensed',
+                          color: AppColors.mutedForeground,
+                          fontSize: 9,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Icon(LucideIcons.move_right, color: AppColors.mutedForeground, size: 9,)
+                    ],
+                  )
                 ],
               ),
               const SizedBox(height: 12),

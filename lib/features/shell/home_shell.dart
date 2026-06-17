@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:jackson_fan_app/core/theme/app_colors.dart';
+import 'package:jackson_fan_app/core/widgets/tab_switcher.dart';
 
 import '../home/home_page.dart';
 
@@ -33,19 +34,29 @@ class _HomeShellState extends State<HomeShell> {
     _PlaceholderPage('我的'),
   ];
 
+  /// 切换到指定 tab。既供底部导航点击用,也通过 TabSwitcher 暴露给深层组件。
+  void _switchTo(int index) {
+    if (index == _currentIndex) return;
+    setState(() => _currentIndex = index);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // AnimatedSwitcher:child 一变就用淡入淡出在新旧页间过渡。
-      // KeyedSubtree + ValueKey(_currentIndex):key 变化让 AnimatedSwitcher
-      // 认定是"新内容",触发过渡,同时目标页重建 → 进场动画重播。
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: KeyedSubtree(
-          key: ValueKey(_currentIndex),
-          child: _pages[_currentIndex],
+    // TabSwitcher:把"切 tab"能力下发给整棵子树,
+    // 深层组件(如今日一言卡)可 TabSwitcher.of(context).switchTo(index) 调用。
+    return TabSwitcher(
+      switchTo: _switchTo,
+      child: Scaffold(
+        // AnimatedSwitcher:child 一变就用淡入淡出在新旧页间过渡。
+        // KeyedSubtree + ValueKey(_currentIndex):key 变化让 AnimatedSwitcher
+        // 认定是"新内容",触发过渡,同时目标页重建 → 进场动画重播。
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: KeyedSubtree(
+            key: ValueKey(_currentIndex),
+            child: _pages[_currentIndex],
+          ),
         ),
-      ),
 
       // NavigationBarTheme 局部覆盖主题,实现"深色底 + 黄高亮"。
       bottomNavigationBar: DecoratedBox(
@@ -87,10 +98,8 @@ class _HomeShellState extends State<HomeShell> {
           ),
           child: NavigationBar(
             selectedIndex: _currentIndex,
-            // 点击某个 tab → 更新索引并重绘(触发淡入淡出)。
-            onDestinationSelected: (index) {
-              setState(() => _currentIndex = index);
-            },
+            // 点击某个 tab → 切换(触发淡入淡出)。
+            onDestinationSelected: _switchTo,
             destinations: const [
               NavigationDestination(icon: Icon(LucideIcons.house_heart), label: '首页'),
               NavigationDestination(
@@ -107,6 +116,7 @@ class _HomeShellState extends State<HomeShell> {
           ),
         ),
         ),
+      ),
       ),
     );
   }
