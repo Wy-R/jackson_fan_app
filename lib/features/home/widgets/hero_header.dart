@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:marquee/marquee.dart';
 
 import '../../../core/theme/app_colors.dart';
 import 'artist_name_section.dart';
 import 'daily_quote_card.dart';
 import 'follower_stats.dart';
-
 
 /// 首页顶部的人物背景大图区:背景图 + 渐变遮罩 + 左下角文字。
 ///
@@ -24,65 +22,66 @@ class HeroHeader extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-          // 背景图,铺满整个区域
-          Image.asset(
-            'assets/images/bg.jpeg',
-            // cover:等比缩放铺满 + 裁切,不变形
-            fit: BoxFit.cover,
-          ),
+        // 背景图,铺满整个区域
+        Image.asset(
+          'assets/images/bg.jpeg',
+          // cover:等比缩放铺满 + 裁切,不变形
+          fit: BoxFit.cover,
+        ),
 
-          // 底部渐变遮罩:从透明过渡到半透明深色,
-          // 让左下角文字在任何图上都清晰(手法同开屏页)。
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.center,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.input,
-                  AppColors.background.withValues(alpha: 0.54),
-                ],
-              ),
+        // 底部渐变遮罩:从透明过渡到半透明深色,
+        // 让左下角文字在任何图上都清晰(手法同开屏页)。
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.center,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.input,
+                AppColors.background.withValues(alpha: 0.54),
+              ],
             ),
           ),
+        ),
 
-          // 左上角文字
-          Align(
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'JW',
-                    // 谷歌字体主导:以 titleLarge 作字号/行高基底,
-                    // 换成 Barlow Condensed 字体˛,再覆盖颜色和字重。
-                    style: GoogleFonts.anton(
-                      textStyle: Theme.of(context).textTheme.titleLarge,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w400,
-                    ),
+        // 左上角文字
+        Align(
+          alignment: Alignment.topLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'JW',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontFamily: 'Anton',
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(height: 4),
-                ],
-              ),
+                ),
+                const SizedBox(height: 4),
+              ],
             ),
           ),
+        ),
 
-          // 浮在背景上的三块内容:顶部引文卡 → (留白) → 艺人名 → 粉丝数。
-          // 用 SafeArea 避开刘海/状态栏,Column + Spacer 实现上下分布。
-          // 底部留出 40 的空间给跑马灯。
-          Positioned.fill(
-            bottom: 40,
-            child: SafeArea(
+        // 浮在背景上的三块内容:顶部引文卡 → (留白) → 艺人名 → 粉丝数。
+        // 用 SafeArea 避开刘海/状态栏,Column + Spacer 实现上下分布。
+        // 底部留出 40 的空间给跑马灯。
+        Positioned.fill(
+          bottom: 40,
+          child: SafeArea(
+            child: Padding(
+              // 统一的左右间距,三块内容共用(各子组件内部不再单独留横向边距)
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,  // 关键:从底部往上排
+                mainAxisAlignment: MainAxisAlignment.end, // 关键:从底部往上排
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   DailyQuoteCard(),
-                  SizedBox(height:40),
+                  SizedBox(height: 70),
                   ArtistNameSection(),
                   SizedBox(height: 16),
                   FollowerStats(),
@@ -91,23 +90,24 @@ class HeroHeader extends StatelessWidget {
               ),
             ),
           ),
+        ),
 
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: double.infinity,   // 撑满横向
-              height: 40,
-              color: AppColors.primary, // 黄色实心底
-              child: Marquee(
-                text: '这是一条跑马灯的通告I》制作中，敬请期待',
-                // 黄底配深色字:primaryForeground 是主题里专门搭 primary 的前景色
-                style: TextStyle(color: AppColors.primaryForeground),
-                blankSpace: 40,        // 一段文字结束到下一段开始的间隔
-                velocity: 30,          // 滚动速度
-              ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            width: double.infinity, // 撑满横向
+            height: 40,
+            color: AppColors.primary, // 黄色实心底
+            child: Marquee(
+              text: '这是一条跑马灯的通告I》制作中，敬请期待',
+              // 黄底配深色字:primaryForeground 是主题里专门搭 primary 的前景色
+              style: TextStyle(color: AppColors.primaryForeground),
+              blankSpace: 40, // 一段文字结束到下一段开始的间隔
+              velocity: 30, // 滚动速度
             ),
           ),
-        ],
+        ),
+      ],
     );
   }
 }

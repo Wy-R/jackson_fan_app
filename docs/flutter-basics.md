@@ -331,3 +331,133 @@ Container(
 2. **声明空目录致白屏**:pubspec 声明了空的 `assets/videos/`
 3. **改入口页用错刷新键**:改了开屏页却没变,因为它已被 pushReplacement 销毁,应按 `R` 而非 `r`
 4. **加依赖后没 pub get**:引入 `lucide_icons` 后报 `depend_on_referenced_packages`,需 `flutter pub get` 刷新
+
+---
+
+## 十二、Column / Row 的空间分配(重点)
+
+做底部「引文卡 + 艺人名 + 粉丝数」这组布局时反复纠结的核心知识。
+
+### mainAxisSize:Column 自己占多高
+- `MainAxisSize.max`(默认)—— 撑满父级给的全部空间
+- `MainAxisSize.min` —— 只占内容本身的大小,刚好包住孩子
+
+> 类比前端:`max` ≈ `height:100%`,`min` ≈ `height:fit-content`。
+> 一个模块(如 `ArtistNameSection`)通常用 `min`,免得它贪婪撑满、把兄弟挤开。
+
+### 三个易混属性分工
+| 属性 | 管什么 |
+|---|---|
+| `mainAxisSize` | Column 自己**占多大**(纵向=高度) |
+| `mainAxisAlignment` | 孩子在主轴上**怎么排**(start/center/end/spaceAround...) |
+| `crossAxisAlignment` | 孩子在交叉轴上**怎么对齐**(纵向列里=左/中/右) |
+
+⚠️ `mainAxisAlignment` 只有在 `MainAxisSize.max`(有多余空间)时才有意义;设了 `min` 紧包内容,就没空间可分了。
+
+### 踩坑:textAlign 不生效
+在 Column 里给每个 `Text` 写 `textAlign: TextAlign.left` 看不出效果 —— 因为 Text 只占自己内容宽度,没有多余空间,textAlign 无从对齐。**真正让整列靠左的是 `Column(crossAxisAlignment: CrossAxisAlignment.start)`**。
+
+### 「从顶部布局」怎么改成「贴底」
+`Column` 默认 `mainAxisAlignment: start`,所以内容堆在顶部。两种贴底思路:
+- **整体贴底**:`mainAxisAlignment: MainAxisAlignment.end`,所有内容成团贴底向上堆
+- **上下分离**:中间插 `Spacer()`,上半部分留顶、下半部分顶到底
+
+---
+
+## 十三、Expanded / Flexible / Spacer
+
+放在 Row / Column 里分配**剩余空间**的三兄弟。
+
+| 组件 | 行为 | 前端类比 |
+|---|---|---|
+| `Expanded` | **强制**占满分到的空间 | `flex: 1` |
+| `Flexible` | **最多**占这么多,内容小就不占满 | `flex: 0 1 auto` |
+| `Spacer` | 看不见的 Expanded,纯占空白 | 空的 `flex:1` div |
+
+- 机制:固定大小的元素先摆好,**剩余空间**由这些 Expanded/Spacer 瓜分。
+- 默认 `flex: 1`,可调比例:`Expanded(flex: 2)` 是 `flex: 1` 的两倍宽。
+- 本质关系:`Spacer()` ≈ `Expanded(child: SizedBox())`。一个撑空白,一个撑内容。
+
+### Spacer vs SizedBox(margin 的真正对应物)
+- 固定间距 → `SizedBox(height: 16)`(这才等于前端的 `margin: 16px`)
+- 弹性留白 → `Spacer()`(等于 `flex: 1`,随容器大小伸缩)
+
+---
+
+## 十四、列表项之间的分隔线
+
+需求:N 个 item 之间要 N-1 条分隔线(首尾不多线)。
+
+### 关键认知:位置逻辑归父级,别塞进 item
+不要给每个 item 加 `border-left` —— 第一个会多出一条线(同前端 `:first-child` 要特殊处理的坑)。根本原因:**item 是独立 widget,它不知道自己是不是第一个/最后一个**,「我在第几位」是布局层(父级)才掌握的信息。塞进 item 会污染它的职责、也不利复用。
+
+### 推荐写法:父级用循环穿插
+```dart
+Row(
+  children: [
+    for (var i = 0; i < items.length; i++) ...[
+      Expanded(child: items[i]),       // 等宽平分,分隔线才落在均匀位置
+      if (i < items.length - 1)         // 最后一个后面不加
+        Container(width: 1, height: 50, color: AppColors.border),
+    ],
+  ],
+)
+```
+- 用 `Expanded` 让每个 item 等宽,竖线才会卡在均匀位置(原 `spaceAround` 做不到)
+- 顶部横线则用 `BoxDecoration(border: Border(top: BorderSide(...)))`
+- 分隔线颜色用半透明 token(如主色 15% 透明)更自然
+
+> `...[ ]` 是 Dart 的「展开(spread)」语法,把循环里生成的多个 widget 摊平进 children 列表。
+
+---
+
+## 十五、SVG 图标(flutter_svg)
+
+把内置 `Icon` 换成自定义 SVG 图标(平台 logo 等)。
+
+### 三步
+1. **装包**:`flutter_svg`(pubspec 已有)
+2. **注册目录**:把 SVG 放 `assets/icons/`,并在 pubspec 声明 + `flutter pub get`
+   ```yaml
+   flutter:
+     assets:
+       - assets/icons/
+   ```
+3. **代码引用**:
+   ```dart
+   SvgPicture.asset(
+     'assets/icons/instagram.svg',
+     width: 22,
+     height: 22,
+     // 给单色图标统一上色
+     colorFilter: const ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
+   )
+   ```
+
+### colorFilter 要点
+- `ColorFilter.mode(色, BlendMode.srcIn)` = 用图标形状、颜色全换成指定色,适合**单色 logo**。
+- ⚠️ 对**多色/渐变 SVG**(如彩色 Instagram),`srcIn` 会把整个图标染成一个色、丢掉原配色。想保留原色就别加 `colorFilter`。
+- 图标显示成色块/比例错乱 → 多半是该 SVG 内 `fill` 写死了颜色,或缺 `viewBox`。
+
+---
+
+## 十六、Dart 的 final / var / const
+
+| Dart | 含义 | JS 类比 |
+|---|---|---|
+| `final x = 1;` | 赋值一次,之后不可重新赋值 | `const`(不可重新赋值) |
+| `var x = 1;` | 可重新赋值 | `let` |
+| `const x = 1;` | **编译期**就能确定的常量 | —— |
+
+### final vs const(易混)
+- `final`:**运行时**才算出值,但赋值后不变。
+- `const`:**编译期**就定死,更严格。
+- 例:`final style = GoogleFonts.anton(...)` 只能用 `final`,因为它是运行时函数调用算出来的;而 `const SizedBox(height: 8)` 编译期就确定,能用 `const`。
+
+### 顺带:抽「通用样式」就是声明个变量复用
+```dart
+final nameStyle = GoogleFonts.anton(fontSize: 48, fontWeight: FontWeight.w700);
+Text('JACKSON', style: nameStyle.copyWith(color: AppColors.foreground));
+Text('WANG',    style: nameStyle.copyWith(color: AppColors.primary));
+```
+`final` 只负责「声明一个不再改的变量」;放在 build 顶部多处引用,就成了「通用样式」。类型可省略(Dart 自动从右值推断,同 TS)。`copyWith` 在共用基础上只改个别属性(这里只改颜色)。

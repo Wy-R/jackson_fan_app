@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'core/theme/app_colors.dart';
 import 'features/shell/home_shell.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class JacksonFanApp extends StatelessWidget {
   const JacksonFanApp({super.key});
@@ -20,9 +19,8 @@ class JacksonFanApp extends StatelessWidget {
           surface: AppColors.background,
         ),
         useMaterial3: true,
-         textTheme: GoogleFonts.dmSansTextTheme(  // 默认配置正文的字体
-          ThemeData.dark().textTheme,
-        ),
+        fontFamily: 'DM Sans',
+        textTheme: ThemeData.dark().textTheme.apply(fontFamily: 'DM Sans'),
       ),
       // 调试首页时先绕过开屏页。要恢复开屏页时改回 WelcomeScreen。
       home: const HomeShell(),

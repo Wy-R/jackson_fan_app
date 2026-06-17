@@ -8,6 +8,11 @@ import '../home/home_page.dart';
 ///
 /// 底部导航需要"切换页面"和"记住当前选中哪个 tab",
 /// 所以用 StatefulWidget 持有当前索引。
+///
+/// 页面切换用 AnimatedSwitcher(渐隐渐现):
+/// - 切 tab 时旧页淡出、新页淡入,不生硬
+/// - 借助 ValueKey(_currentIndex),切换会重建目标页,
+///   从而让页内的 EntranceAnimation 每次切回都重新播放进场动画
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -20,7 +25,6 @@ class _HomeShellState extends State<HomeShell> {
   int _currentIndex = 0;
 
   /// 5 个 tab 对应的页面。首页是真内容,其余为占位页。
-  /// 用 late final 因为 const 列表里不能放每次都新建的 widget,这里固定一次即可。
   static const _pages = <Widget>[
     HomePage(),
     _PlaceholderPage('音乐'),
@@ -32,9 +36,16 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // IndexedStack:同时保留所有页面的状态,只显示当前索引那个。
-      // (相比每次 setState 重建,切回某个 tab 时它的滚动位置等状态还在)
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      // AnimatedSwitcher:child 一变就用淡入淡出在新旧页间过渡。
+      // KeyedSubtree + ValueKey(_currentIndex):key 变化让 AnimatedSwitcher
+      // 认定是"新内容",触发过渡,同时目标页重建 → 进场动画重播。
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: KeyedSubtree(
+          key: ValueKey(_currentIndex),
+          child: _pages[_currentIndex],
+        ),
+      ),
 
       // NavigationBarTheme 局部覆盖主题,实现"深色底 + 黄高亮"。
       bottomNavigationBar: DecoratedBox(
@@ -76,7 +87,7 @@ class _HomeShellState extends State<HomeShell> {
           ),
           child: NavigationBar(
             selectedIndex: _currentIndex,
-            // 点击某个 tab → 更新索引并重绘。
+            // 点击某个 tab → 更新索引并重绘(触发淡入淡出)。
             onDestinationSelected: (index) {
               setState(() => _currentIndex = index);
             },

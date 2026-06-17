@@ -12,7 +12,7 @@ class AppColors {
   static const cardForeground = Color(0xFFF0EDE8);
   static const popover = Color(0xFF111111);
   static const popoverForeground = Color(0xFFF0EDE8);
-  static const primary = Color(0xFFF5C400);
+  static const primary = Color(0xFFC8A45C);
   static const primaryForeground = Color(0xFF080808);
   static const secondary = Color(0xFF1A1A1A);
   static const secondaryForeground = Color(0xFFF0EDE8);
@@ -25,7 +25,7 @@ class AppColors {
   static const input = Colors.transparent;
   static const inputBackground = Color(0xFF1A1A1A);
   static const switchBackground = Color(0xFF333333);
-  static const border = Color.fromRGBO(245, 196, 0, 0.15);
+  static const border = Color.fromRGBO(200, 164, 92, 0.15);
   static const whiteAlpha30 = Color.fromRGBO(255, 255, 255, 0.3);
 
   static const fontWeightMedium = FontWeight.w500;
