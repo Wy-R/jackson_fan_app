@@ -37,6 +37,7 @@ dependencies:
   google_fonts: ^6.3.0
   flutter_lucide: ^1.11.0
   marquee: ^2.3.0
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +57,7 @@ flutter:
   assets:
     - assets/images/
     - assets/videos/
+    - assets/icons/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -66,7 +66,7 @@ class _HomeShellState extends State<HomeShell> {
             labelTextStyle: WidgetStateProperty.resolveWith((states) {
               final selected = states.contains(WidgetState.selected);
               return TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 color: selected ? AppColors.primary : AppColors.mutedForeground,
                 fontWeight: selected
                     ? AppColors.fontWeightMedium
@@ -87,10 +87,10 @@ class _HomeShellState extends State<HomeShell> {
                 label: '音乐',
               ),
               NavigationDestination(
-                icon: Icon(LucideIcons.search),
+                icon: Icon(LucideIcons.ticket),
                 label: '巡演',
               ),
-              NavigationDestination(icon: Icon(LucideIcons.book), label: '每日'),
+              NavigationDestination(icon: Icon(LucideIcons.book_open), label: '每日'),
               NavigationDestination(icon: Icon(LucideIcons.user), label: '我的'),
             ],
           ),

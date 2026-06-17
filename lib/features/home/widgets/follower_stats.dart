@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_lucide/flutter_lucide.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 
@@ -11,43 +12,84 @@ class FollowerStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 各平台数据,后续替换为真实数据源
+    const items = [
+      _StatItem(icon: 'assets/icons/instagram.svg', count: '32.6M', label: 'INS'),
+      _StatItem(icon: 'assets/icons/weibo.svg', count: '8.2M', label: '微博'),
+      _StatItem(icon: 'assets/icons/x.svg', count: '4.1M', label: 'X'),
+      _StatItem(icon: 'assets/icons/netease.svg', count: '12.8M', label: '网易云'),
+    ];
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      // 外边距:左右留白 + 上方间距
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      // 顶部横线
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: Row(
         children: [
-          // TODO: INS/X/YT/Music 图标 + 数字,间距、尺寸待调
-          // 占位图标:lucide 里只有 user/music/circle/play,后续替换
-          _StatItem(icon: LucideIcons.user, count: '32.6M'),
-          _StatItem(icon: LucideIcons.circle, count: '8.2M'),
-          _StatItem(icon: LucideIcons.play, count: '4.1M'),
-          _StatItem(icon: LucideIcons.music, count: '12.8M'),
+          for (var i = 0; i < items.length; i++) ...[
+            Expanded(child: items[i]),
+            // 在 item 之间插入竖线(最后一个后面不加)
+            if (i < items.length - 1)
+              Container(
+                width: 1,
+                height: 50,
+                color: AppColors.border,
+              ),
+          ],
         ],
       ),
     );
   }
 }
 
-/// 单个平台项:图标 + 数字,纵向排列。
+/// 单个平台项:图标 + 数字 + 平台名,纵向排列。
 class _StatItem extends StatelessWidget {
-  const _StatItem({required this.icon, required this.count});
+  const _StatItem({
+    required this.icon,
+    required this.count,
+    required this.label,
+  });
 
-  final IconData icon;
+  /// SVG 资源路径,如 'assets/icons/instagram.svg'
+  final String icon;
   final String count;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: AppColors.primary, size: 24),
-        const SizedBox(height: 4),
+        SvgPicture.asset(
+          icon,
+          width: 15,
+          height: 15,
+          // 给单色图标统一上主题色
+          colorFilter: const ColorFilter.mode(
+            AppColors.whiteAlpha30,
+            BlendMode.srcIn,
+          ),
+        ),
+        const SizedBox(height: 8),
         Text(
           count,
-          style: const TextStyle(
+          style: GoogleFonts.anton(
+            textStyle: Theme.of(context).textTheme.titleSmall,
             color: AppColors.foreground,
-            fontSize: 14,
-            fontWeight: AppColors.fontWeightMedium,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.whiteAlpha30,
+            fontSize: 10,
+            letterSpacing: 1,
           ),
         ),
       ],

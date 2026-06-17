@@ -11,21 +11,37 @@ class ArtistNameSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final nameStyle = GoogleFonts.anton(
+      fontSize: 50,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 3,
+      height: 1.0 // 行高收紧,让两行名字贴近
+    );
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,  // 整列靠左 ← 关键
         mainAxisSize: MainAxisSize.min,
         children: [
-          // TODO: 用粗体特殊字体显示"JACKSON WANG"
           Text(
-            'JACKSON WANG',
-            style: GoogleFonts.anton(
-              fontSize: 48,
-              color: AppColors.foreground,
-              fontWeight: FontWeight.w700,
+            '★ ARTIST · CREATOR · TEAM WANG',
+            style: GoogleFonts.barlowCondensed(
+              fontSize: 10,
+              color: AppColors.accent,
               letterSpacing: 2,
             ),
-            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'JACKSON',
+            style: nameStyle.copyWith(color: AppColors.foreground),
+          ),
+         
+          Text(
+            'WANG',
+            style: nameStyle.copyWith(color: AppColors.primary),
           ),
         ],
       ),

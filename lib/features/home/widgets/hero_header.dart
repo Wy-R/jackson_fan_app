@@ -46,7 +46,7 @@ class HeroHeader extends StatelessWidget {
             ),
           ),
 
-          // 左下角文字
+          // 左上角文字
           Align(
             alignment: Alignment.topLeft,
             child: Padding(
@@ -60,7 +60,7 @@ class HeroHeader extends StatelessWidget {
                     // 谷歌字体主导:以 titleLarge 作字号/行高基底,
                     // 换成 Barlow Condensed 字体˛,再覆盖颜色和字重。
                     style: GoogleFonts.anton(
-                      textStyle: Theme.of(context).textTheme.titleSmall,
+                      textStyle: Theme.of(context).textTheme.titleLarge,
                       color: AppColors.primary,
                       fontWeight: FontWeight.w400,
                     ),
@@ -78,13 +78,15 @@ class HeroHeader extends StatelessWidget {
             bottom: 40,
             child: SafeArea(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,  // 关键:从底部往上排
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   DailyQuoteCard(),
-                  Spacer(),
+                  SizedBox(height:40),
                   ArtistNameSection(),
                   SizedBox(height: 16),
                   FollowerStats(),
-                  SizedBox(height: 16),
+                  SizedBox(height: 5),
                 ],
               ),
             ),

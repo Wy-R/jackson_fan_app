@@ -22,10 +22,11 @@ class AppColors {
   static const accentForeground = Color(0xFFF0EDE8);
   static const destructive = Color(0xFFD4183D);
   static const destructiveForeground = Color(0xFFFFFFFF);
-  static const border = Color.fromRGBO(245, 196, 0, 0.15);
   static const input = Colors.transparent;
   static const inputBackground = Color(0xFF1A1A1A);
   static const switchBackground = Color(0xFF333333);
+  static const border = Color.fromRGBO(245, 196, 0, 0.15);
+  static const whiteAlpha30 = Color.fromRGBO(255, 255, 255, 0.3);
 
   static const fontWeightMedium = FontWeight.w500;
   static const fontWeightNormal = FontWeight.w400;
