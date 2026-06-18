@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 保存图片到相册(gal):Android 9 及以下需要写外部存储权限;
+         10+ 走 scoped storage,无需此权限,故用 maxSdkVersion 限定。 -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
     <application
         android:label="jackson_fan_app"
         android:name="${applicationName}"

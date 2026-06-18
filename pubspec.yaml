@@ -37,6 +37,9 @@ dependencies:
   flutter_lucide: ^1.11.0
   marquee: ^2.3.0
   flutter_svg: ^2.3.0
+  share_plus: ^13.1.0
+  path_provider: ^2.1.6
+  gal: ^2.3.2
 
 dev_dependencies:
   flutter_test:
@@ -55,6 +58,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/bgs/
     - assets/videos/
     - assets/icons/
 
@@ -78,6 +82,12 @@ flutter:
         - asset: assets/fonts/DMSans-SemiBold.ttf
           weight: 600
         - asset: assets/fonts/DMSans-Bold.ttf
+          weight: 700
+    - family: Space Mono
+      fonts:
+        - asset: assets/fonts/SpaceMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/SpaceMono-Bold.ttf
           weight: 700
 
   # To add assets to your application, add an assets section, like this:

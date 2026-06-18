@@ -48,7 +48,7 @@ class HeroHeader extends StatelessWidget {
         Align(
           alignment: Alignment.topLeft,
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.only(left: 20, top: 60),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,

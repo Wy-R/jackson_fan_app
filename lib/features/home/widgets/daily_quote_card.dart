@@ -63,7 +63,7 @@ class DailyQuoteCard extends StatelessWidget {
                     children: [
                       Icon(LucideIcons.dot, color: AppColors.primary, size: 9),
                       Text(
-                        '今日一言',
+                        '今日信箱',
                         style: TextStyle(color: AppColors.primary, fontSize: 9),
                       ),
                     ],

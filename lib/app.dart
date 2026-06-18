@@ -19,8 +19,8 @@ class JacksonFanApp extends StatelessWidget {
           surface: AppColors.background,
         ),
         useMaterial3: true,
-        fontFamily: 'DM Sans',
-        textTheme: ThemeData.dark().textTheme.apply(fontFamily: 'DM Sans'),
+        fontFamily: 'Space Mono',
+        fontFamilyFallback: const ['DM Sans'],
       ),
       // 调试首页时先绕过开屏页。要恢复开屏页时改回 WelcomeScreen。
       home: const HomeShell(),

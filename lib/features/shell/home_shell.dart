@@ -3,6 +3,7 @@ import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:jackson_fan_app/core/theme/app_colors.dart';
 import 'package:jackson_fan_app/core/widgets/tab_switcher.dart';
 
+import '../daily/daily_page.dart';
 import '../home/home_page.dart';
 
 /// 导航壳:承载底部导航栏 + 5 个 tab 页面的外层容器。
@@ -30,7 +31,7 @@ class _HomeShellState extends State<HomeShell> {
     HomePage(),
     _PlaceholderPage('音乐'),
     _PlaceholderPage('巡演'),
-    _PlaceholderPage('每日'),
+    DailyPage(),
     _PlaceholderPage('我的'),
   ];
 
@@ -43,7 +44,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     // TabSwitcher:把"切 tab"能力下发给整棵子树,
-    // 深层组件(如今日一言卡)可 TabSwitcher.of(context).switchTo(index) 调用。
+    // 深层组件(如今日信箱卡)可 TabSwitcher.of(context).switchTo(index) 调用。
     return TabSwitcher(
       switchTo: _switchTo,
       child: Scaffold(
@@ -58,65 +59,78 @@ class _HomeShellState extends State<HomeShell> {
           ),
         ),
 
-      // NavigationBarTheme 局部覆盖主题,实现"深色底 + 黄高亮"。
-      bottomNavigationBar: DecoratedBox(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: AppColors.primary)),
-        ),
-        // 包一层 Theme 关掉点击水波纹/高亮:
-        // splashFactory = NoSplash 去掉按下扩散的椭圆,
-        // splashColor/highlightColor 透明做双保险。
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            splashFactory: NoSplash.splashFactory,
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
+        // NavigationBarTheme 局部覆盖主题,实现"深色底 + 黄高亮"。
+        bottomNavigationBar: DecoratedBox(
+          decoration: const BoxDecoration(
+            border: Border(top: BorderSide(color: AppColors.primary)),
           ),
-          child: NavigationBarTheme(
-          data: NavigationBarThemeData(
-            backgroundColor: AppColors.navigationBackground,
-            // 去掉选中项背后的指示块,纯靠图标/文字变黄来高亮(贴近参考图)。
-            indicatorColor: AppColors.input,
-            // 图标颜色:选中黄、未选中灰。WidgetStateProperty 按状态返回不同值。
-            iconTheme: WidgetStateProperty.resolveWith((states) {
-              final selected = states.contains(WidgetState.selected);
-              return IconThemeData(
-                color: selected ? AppColors.primary : AppColors.mutedForeground,
-              );
-            }),
-            // 文字颜色同理。
-            labelTextStyle: WidgetStateProperty.resolveWith((states) {
-              final selected = states.contains(WidgetState.selected);
-              return TextStyle(
-                fontSize: 11,
-                color: selected ? AppColors.primary : AppColors.mutedForeground,
-                fontWeight: selected
-                    ? AppColors.fontWeightMedium
-                    : AppColors.fontWeightNormal,
-              );
-            }),
-          ),
-          child: NavigationBar(
-            selectedIndex: _currentIndex,
-            // 点击某个 tab → 切换(触发淡入淡出)。
-            onDestinationSelected: _switchTo,
-            destinations: const [
-              NavigationDestination(icon: Icon(LucideIcons.house_heart), label: '首页'),
-              NavigationDestination(
-                icon: Icon(LucideIcons.disc_3),
-                label: '音乐',
+          // 包一层 Theme 关掉点击水波纹/高亮:
+          // splashFactory = NoSplash 去掉按下扩散的椭圆,
+          // splashColor/highlightColor 透明做双保险。
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              splashFactory: NoSplash.splashFactory,
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+            ),
+            child: NavigationBarTheme(
+              data: NavigationBarThemeData(
+                backgroundColor: AppColors.navigationBackground,
+                // 去掉选中项背后的指示块,纯靠图标/文字变黄来高亮(贴近参考图)。
+                indicatorColor: AppColors.input,
+                // 图标颜色:选中黄、未选中灰。WidgetStateProperty 按状态返回不同值。
+                iconTheme: WidgetStateProperty.resolveWith((states) {
+                  final selected = states.contains(WidgetState.selected);
+                  return IconThemeData(
+                    color: selected
+                        ? AppColors.primary
+                        : AppColors.mutedForeground,
+                  );
+                }),
+                // 文字颜色同理。
+                labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                  final selected = states.contains(WidgetState.selected);
+                  return TextStyle(
+                    fontSize: 11,
+                    color: selected
+                        ? AppColors.primary
+                        : AppColors.mutedForeground,
+                    fontWeight: selected
+                        ? AppColors.fontWeightMedium
+                        : AppColors.fontWeightNormal,
+                  );
+                }),
               ),
-              NavigationDestination(
-                icon: Icon(LucideIcons.ticket),
-                label: '巡演',
+              child: NavigationBar(
+                selectedIndex: _currentIndex,
+                // 点击某个 tab → 切换(触发淡入淡出)。
+                onDestinationSelected: _switchTo,
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(LucideIcons.house_heart),
+                    label: '首页',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(LucideIcons.disc_3),
+                    label: '音乐',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(LucideIcons.ticket),
+                    label: '巡演',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(LucideIcons.book_open),
+                    label: '每日',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(LucideIcons.user),
+                    label: '我的',
+                  ),
+                ],
               ),
-              NavigationDestination(icon: Icon(LucideIcons.book_open), label: '每日'),
-              NavigationDestination(icon: Icon(LucideIcons.user), label: '我的'),
-            ],
+            ),
           ),
         ),
-        ),
-      ),
       ),
     );
   }
