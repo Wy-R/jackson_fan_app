@@ -461,3 +461,319 @@ Text('JACKSON', style: nameStyle.copyWith(color: AppColors.foreground));
 Text('WANG',    style: nameStyle.copyWith(color: AppColors.primary));
 ```
 `final` 只负责「声明一个不再改的变量」;放在 build 顶部多处引用,就成了「通用样式」。类型可省略(Dart 自动从右值推断,同 TS)。`copyWith` 在共用基础上只改个别属性(这里只改颜色)。
+
+---
+
+## 十七、导航的两套体系:tab 切换 ≠ 页面路由
+
+这是 Flutter 和前端最容易混的一点。**底部 tab 切换**和**二级页面跳转**是两回事,用不同机制。
+
+| | 底部 tab(平级切换) | 二级页面跳转 |
+|---|---|---|
+| 性质 | 5 个 tab 互相平等,来回切 | 从 A 钻进 A 的子页 |
+| 返回 | 没有「返回」概念 | 有返回栈,自动返回箭头 + iOS 侧滑返回 |
+| 例子 | 大厅 / 音乐 / 信箱 / 我的 | 我的 → 我的收藏 → 卡片详情 |
+| 前端类比 | tab 切换 | 路由 push |
+| 实现 | AnimatedSwitcher / PageView + 索引 | `Navigator.push` |
+
+**关键认知**:底部 tab 那套(PageView/AnimatedSwitcher)做不了「返回」,所以二级页面**不能**用它,要用 `Navigator`。
+
+### Flutter 内置 Navigator,不用装 router
+和前端不同,二级页面**不需要装 react-router 那种库**,Flutter 自带 `Navigator`(页面栈):
+```dart
+// 进入二级页(自动带返回箭头、支持侧滑返回)
+Navigator.push(context, MaterialPageRoute(builder: (_) => const FavoritesPage()));
+// 返回
+Navigator.pop(context);
+```
+- `push` 压入新页面 / `pop` 弹出返回(同你笔记里开屏用的 `pushReplacement` 一家)
+- 进去的页面只要用了 `AppBar`,返回箭头**自动出现**,不用手写
+
+### 什么时候才需要 GoRouter
+内置 `Navigator` 能撑很久。出现以下信号才升级到 `GoRouter`:
+- 需要 URL / 网页深链接(分享链接直达某页,Web 端尤其要)
+- 二三级页面特别多、跳转关系复杂
+- 需要登录守卫、统一路由表
+这些没有就别上,属于过早优化。
+
+### 完整图景:两套导航叠加
+```
+HomeShell(底部 tab,平级)              ← AnimatedSwitcher
+├── 大厅
+├── 音乐
+├── 信箱
+└── 我的 ──push──> 我的收藏 / 设置        ← Navigator(纵向二级页)
+```
+横向 tab + 各 tab 内部 push 子页,这是 Flutter 标准做法,两者不冲突。
+
+---
+
+## 十八、命名路由:集中登记有哪些页面
+
+二级页面多了,可以用「命名路由」集中管理,一眼看全有哪些路由。
+
+### 路由名常量 + 路由表
+```dart
+// core/navigation/app_routes.dart
+class AppRoutes {
+  static const favorites = '/me/favorites';
+  static const settings = '/me/settings';
+}
+
+final appRoutes = <String, WidgetBuilder>{
+  AppRoutes.favorites: (_) => const FavoritesPage(),
+  AppRoutes.settings: (_) => const SettingsPage(),
+};
+```
+注册到 `MaterialApp(routes: appRoutes)`,跳转用 `Navigator.pushNamed(context, AppRoutes.favorites)`。
+
+### 命名路由 vs 直接 push
+| | 命名路由 `pushNamed` | 直接 `push(MaterialPageRoute)` |
+|---|---|---|
+| 路由总览 | ✅ 路由表一目了然 | ❌ 散落 |
+| 传参 | ⚠️ 走 `arguments`,类型不安全(要强转) | ✅ 直接传构造参数,类型安全 |
+| 适合 | 无参/简单的二级页 | 要传复杂参数(如某张卡的 id) |
+
+---
+
+## 十九、跨层级通信:InheritedWidget(= React Context)
+
+**问题**:深层组件要触发顶层动作(如首页的卡片点击 → 切到「信箱」tab,而 tab 状态在最顶层 Shell,中间隔好几层)。
+
+**做法**:用 `InheritedWidget` 自上而下共享一个「能力」,深层组件 `.of(context)` 直接拿,不用一层层传回调(避免 prop drilling)。它就是 **Flutter 内置的 React Context**。
+
+```dart
+// 顶层(Shell)提供「切 tab 能力」
+TabSwitcher(switchTo: _switchToId, child: Scaffold(...))
+
+// 任意深层组件取用
+TabSwitcher.of(context).switchTo(TabId.mailbox);
+```
+
+要点:
+- `dependOnInheritedWidgetOfExactType<T>()` 取最近的祖先(封装成 `maybeOf` / `of`)
+- 对照表:`InheritedWidget` ≈ `Context.Provider`,`.of(context)` ≈ `useContext`
+
+---
+
+## 二十、封装「能力」以隔离实现 —— 贯穿全程的核心套路
+
+反复用到的同一招:**封装「做什么」,隐藏「怎么做」**。调用方只表达意图,底层实现随时能换,迁移成本从「改几十处」降到「改一处」。
+
+| 封装 | 暴露的能力(做什么) | 隐藏的实现(怎么做) | 将来换实现只改 |
+|---|---|---|---|
+| `AssetDataService` | `loadDailyQuotes()` 取数据 | 写死 → 将来 Firebase/接口 | service 一处 |
+| `TabSwitcher` | `switchTo(TabId)` 切 tab | setState → 将来状态管理/路由 | Shell 一处 |
+| 命名路由 / 跳转封装 | 「去收藏页」 | `Navigator` → 将来 GoRouter | 路由表一处 |
+
+判断技术债的原则:**只要「意图」和「实现」解耦,底层就能随时换,就不算债。** 担心「现在不用 X 以后迁移麻烦」时,答案通常不是「现在就上 X」,而是「先封装好接口」。
+
+### 配套:用枚举代替魔法索引
+切 tab 别用数字(`switchTo(3)`),用语义枚举:
+```dart
+enum TabId { home, music, mailbox, profile }
+TabSwitcher.of(context).switchTo(TabId.mailbox);  // 说「去信箱」,不说「去第3个」
+```
+即使 tab 增删/调序,这行也不用改 —— Shell 内部用 `indexWhere` 按身份查实际位置。
+
+---
+
+## 二十一、UI 唯一数据源:一份配置生成多处
+
+**踩过的坑**:底部导航的 `destinations`(导航项)和 `_pages`(页面)分两处手写,靠索引一一对应。删一个 tab 忘了同步另一处,就**全部错位**。
+
+**解法**:抽一个 tab 配置列表做**唯一数据源**,导航项和页面都从它生成:
+```dart
+class _TabItem { final TabId id; final IconData icon; final String label; final Widget page; ... }
+
+static const _tabs = [
+  _TabItem(id: TabId.home, icon: ..., label: '大厅', page: HomePage()),
+  // ...
+];
+
+// 页面:   _tabs[_currentIndex].page
+// 导航项: for (final tab in _tabs) NavigationDestination(icon: Icon(tab.icon), label: tab.label)
+```
+增删/调序 tab **只改 `_tabs` 一处**,两边自动同步、永不错位。原则:**同一份数据别写两遍。**
+
+---
+
+## 二十二、通用页面脚手架 & 截图/分享/保存
+
+### 通用二级页脚手架(SubPage)
+二级页都有「标题 + 返回 + 可选操作按钮」,抽成一个组件,各页只传标题和内容:
+```dart
+SubPage(
+  title: '我的收藏',
+  actions: [IconButton(...)],   // 可选,不传则没有
+  child: 内容,
+)
+```
+- 返回箭头由 `AppBar` + `push` **自动**提供,不用手写
+- 改一处样式,所有二级页统一变
+
+### Widget 截图成图片
+用 `RepaintBoundary` + `GlobalKey` 把任意 widget 渲染成 PNG(所见即所得,叠加的水印等都进图):
+```dart
+final boundary = key.currentContext!.findRenderObject() as RenderRepaintBoundary;
+final image = await boundary.toImage(pixelRatio: 3.0);   // >1 更高清
+final bytes = (await image.toByteData(format: ui.ImageByteFormat.png))!.buffer.asUint8List();
+```
+关键:`RepaintBoundary` 包在切换器(AnimatedSwitcher)**外层**,GlobalKey 才始终指向当前显示的内容。
+
+### 分享 vs 保存到相册
+| 功能 | 包 | 权限 | 最后一步 |
+|---|---|---|---|
+| 分享 | `share_plus` + `path_provider` | **不要** | 写临时文件 → `SharePlus.instance.share` 调系统面板 |
+| 存相册 | `gal` | **要**(iOS 配 `NSPhotoLibraryAddUsageDescription`,Android 配权限) | `Gal.putImageBytes(bytes)` |
+
+两者**共用截图那一步**(截图工具抽成 core 函数复用),只是末端不同。都用 try-catch 兜底,失败弹 SnackBar(toast)。
+
+### 异步用 context 的防护(再次强调)
+`_share`/`_download` 是 async,`await` 后用 `context`(如弹 SnackBar)前必须 `if (!mounted) return;` —— 和动画延迟回调同一个坑。
+
+### 装原生包后必须完全重启
+`share_plus` / `gal` / `path_provider` 含原生代码,装完 + 改了 Info.plist/AndroidManifest,**必须停掉 `flutter run` 重跑**,热重载/热重启都加载不了原生层。(同 pubspec 改 assets/字体的规律。)
+
+---
+
+## 二十三、Future / async / await(= JS 的 Promise)
+
+`Future<T>` 代表「现在还没有、未来会有的值」—— Dart 版 Promise。网络请求、读文件、定位等耗时操作都返回它。
+
+| Dart | JS |
+|---|---|
+| `Future<T>` | `Promise<T>` |
+| `async` / `await` | `async` / `await`(完全一致) |
+| `.then()` | `.then()` |
+| `Future.value(x)` | `Promise.resolve(x)` |
+
+```dart
+Future<Weather> loadWeather() async {
+  final res = await http.get(url);          // 等网络返回
+  return Weather.fromJson(jsonDecode(res.body));
+}
+final w = await loadWeather();              // 调用方等它出结果
+```
+
+三种状态(同 Promise):未完成 / 完成有值 / 完成有错。
+
+---
+
+## 二十四、网络请求(http 包)
+
+```dart
+// pubspec: http
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+final res = await http.get(Uri.parse('https://...'));
+if (res.statusCode != 200) throw Exception('请求失败');
+final json = jsonDecode(res.body) as Map<String, dynamic>;  // 解析 JSON
+final model = MyModel.fromJson(json);                        // 配 fromJson 用
+```
+
+要点:
+- `Uri.parse(...)` 把字符串转成 URL 对象
+- `jsonDecode` 把响应体字符串解析成 Map/List,再喂给模型的 `fromJson`
+- iOS/Android 默认允许 HTTPS 出站,无需额外配置(HTTP 明文才需配 ATS)
+
+### 免费天气 API:Open-Meteo
+无需注册、无需 key、个人用约等于无限量。天气接口要**经纬度**(不收城市名),天气状况是 WMO **数字代码**,需自己映射成「晴/雨」+ emoji。
+
+---
+
+## 二十五、FutureBuilder:按异步状态渲染 UI
+
+UI 的 build 不能 `await`(必须立刻返回 widget)。`FutureBuilder` 帮你监听一个 Future,在「加载中 / 成功 / 失败」三态分别渲染:
+
+```dart
+FutureBuilder<Weather>(
+  future: _weatherFuture,
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) return 加载中;
+    if (snapshot.hasError || !snapshot.hasData) return 出错;
+    return 显示(snapshot.data!);
+  },
+)
+```
+
+**最常见的坑**:`future:` 要在 `initState` 里取一次存起来(`late final _f = service.load()`),**别在 build 里直接** `future: service.load()` —— 否则每次 build 都重新发起请求。
+
+### 缓存省请求
+Service 内部加个内存缓存(记录上次结果 + 时间戳),TTL 内重复调用直接返回上次结果,不重复打网络:
+```dart
+if (_cache != null && DateTime.now().difference(_cacheAt!) < _ttl) return _cache!;
+```
+
+---
+
+## 二十六、地理定位(geolocator)& 优雅降级
+
+```dart
+// pubspec: geolocator
+// iOS Info.plist: NSLocationWhenInUseUsageDescription(权限说明,不配会闪退)
+// Android Manifest: ACCESS_FINE/COARSE_LOCATION
+
+// 流程:服务是否开启 → 检查/请求权限 → 取坐标
+final ok = await Geolocator.isLocationServiceEnabled();
+var perm = await Geolocator.checkPermission();
+if (perm == LocationPermission.denied) perm = await Geolocator.requestPermission();
+final pos = await Geolocator.getCurrentPosition();   // pos.latitude / longitude
+```
+
+### 优雅降级(关键设计)
+定位极易失败(用户拒绝/系统关定位/超时),所以**必须兜底**。把「定位 → 失败回默认值」封装在 Service 内部,UI 完全不用管:
+```dart
+try {
+  final coord = await location.getCurrentCoordinates();  // 成功:真实位置
+} catch (_) {
+  // 失败:降级到默认城市(上海),保证功能始终可用
+}
+```
+
+坑:
+- **iOS 模拟器默认没位置**,要在模拟器菜单 `Features → Location` 设一个,否则定位拿不到、走降级
+- 定位只给经纬度,要城市名得另调「逆地理编码」接口
+
+---
+
+## 二十七、自定义 App 图标(flutter_launcher_icons)
+
+不用手动做几十个尺寸 —— 准备**一张 1024×1024 PNG**,工具自动生成各平台全部尺寸。
+
+```yaml
+# dev 依赖:flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: "assets/images/logo/app_icon.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true            # iOS 图标不支持透明,去 alpha
+  background_color_ios: "#080808"   # 透明处填此底色(否则变黑)
+```
+```
+dart run flutter_launcher_icons   # 一键生成
+```
+
+要点:
+- 源图**正方形、不要自己加圆角**(系统自动裁)、**iOS 不能透明**(透明处会黑,用 `remove_alpha_ios` + 背景色兜底)
+- 图标是原生资源,生成后**必须完全重启**;且要回**模拟器桌面**看(app 内部看不到自己的图标)
+- 各平台图标实际存放:iOS `Runner/Assets.xcassets/AppIcon.appiconset/`,Android `res/mipmap-*/`
+
+---
+
+## 二十八、按功能组织代码(feature-first)
+
+把一个完整功能的所有文件收进一个 feature 目录,而非按文件类型散放。例:天气功能集中成 `features/sky/`:
+```
+features/sky/
+├── models/weather.dart
+├── services/weather_service.dart   # 数据 + 定位降级
+│   └── location_service.dart
+└── widgets/
+    ├── sky_entry.dart              # 首页入口
+    └── sky_sheet.dart              # 浮层
+```
+好处:改一个功能,相关文件都在一处;功能之间隔离;新增功能自成一块。
+
+判断放哪:**某功能专属 → 放该 feature;跨功能通用 → 放 core**(主题、通用 widget、工具)。

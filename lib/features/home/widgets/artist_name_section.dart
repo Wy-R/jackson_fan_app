@@ -14,7 +14,7 @@ class ArtistNameSection extends StatelessWidget {
       fontFamily: 'Anton',
       fontSize: 50,
       fontWeight: FontWeight.w700,
-      letterSpacing: 3,
+      letterSpacing: 2,
       height: 1.0, // 行高收紧,让两行名字贴近
     );
 
@@ -25,10 +25,9 @@ class ArtistNameSection extends StatelessWidget {
         Text(
           '★ ARTIST · CREATOR · TEAM WANG',
           style: TextStyle(
-            fontFamily: 'Barlow Condensed',
             fontSize: 10,
             color: AppColors.accent,
-            letterSpacing: 2,
+            letterSpacing: 1,
           ),
         ),
         const SizedBox(height: 8),

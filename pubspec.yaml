@@ -40,11 +40,14 @@ dependencies:
   share_plus: ^13.1.0
   path_provider: ^2.1.6
   gal: ^2.3.2
+  http: ^1.6.0
+  geolocator: ^14.0.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -120,3 +123,14 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# App 启动图标生成配置:由一张源图生成各平台所需的全部尺寸。
+# 生成命令:dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: "assets/images/logo/app_icon.png"
+  android: true
+  ios: true
+  # iOS 图标不支持透明,去掉 alpha 并以此色填充透明区域(主题黑底)
+  remove_alpha_ios: true
+  background_color_ios: "#080808"
+

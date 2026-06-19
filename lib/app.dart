@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'core/navigation/app_routes.dart';
 import 'core/theme/app_colors.dart';
 import 'features/shell/home_shell.dart';
 
@@ -24,6 +25,8 @@ class JacksonFanApp extends StatelessWidget {
       ),
       // 调试首页时先绕过开屏页。要恢复开屏页时改回 WelcomeScreen。
       home: const HomeShell(),
+      // 命名路由表(二级页面),清单见 core/navigation/app_routes.dart
+      routes: appRoutes,
     );
   }
 }

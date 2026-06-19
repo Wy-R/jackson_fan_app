@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../sky/widgets/sky_entry.dart';
+import '../../sky/widgets/sky_sheet.dart';
 import 'artist_name_section.dart';
 import 'daily_quote_card.dart';
-import 'follower_stats.dart';
 
 /// 首页顶部的人物背景大图区:背景图 + 渐变遮罩 + 左下角文字。
 ///
@@ -44,25 +45,29 @@ class HeroHeader extends StatelessWidget {
           ),
         ),
 
-        // 左上角文字
-        Align(
-          alignment: Alignment.topLeft,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 20, top: 60),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'JW',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontFamily: 'Anton',
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
+        // 顶部一行:左 JW 标识,右 天气入口(同一片天空)
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'JW',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontFamily: 'Anton',
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-              ],
+                  SkyEntry(onTap: () => showSkySheet(context)),
+                ],
+              ),
             ),
           ),
         ),
@@ -81,11 +86,11 @@ class HeroHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   DailyQuoteCard(),
-                  SizedBox(height: 70),
+                  SizedBox(height: 80),
                   ArtistNameSection(),
-                  SizedBox(height: 16),
-                  FollowerStats(),
-                  SizedBox(height: 5),
+                  SizedBox(height: 15),
+                  // FollowerStats(), // 先注释掉
+                  // SizedBox(height: 5),
                 ],
               ),
             ),

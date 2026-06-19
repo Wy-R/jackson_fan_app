@@ -5,6 +5,7 @@ import 'package:jackson_fan_app/core/widgets/tab_switcher.dart';
 
 import '../daily/daily_page.dart';
 import '../home/home_page.dart';
+import '../profile/profile_page.dart';
 
 /// 导航壳:承载底部导航栏 + 5 个 tab 页面的外层容器。
 ///
@@ -26,17 +27,23 @@ class _HomeShellState extends State<HomeShell> {
   /// 当前选中的 tab 索引,0 = 首页。
   int _currentIndex = 0;
 
-  /// 5 个 tab 对应的页面。首页是真内容,其余为占位页。
-  static const _pages = <Widget>[
-    HomePage(),
-    _PlaceholderPage('音乐'),
-    _PlaceholderPage('巡演'),
-    DailyPage(),
-    _PlaceholderPage('我的'),
+  /// tab 配置列表:唯一数据源。底部导航项与页面都由它生成,
+  /// 增删/调序 tab 只改这里一处,两边自动同步、永不错位。
+  static const _tabs = <_TabItem>[
+    _TabItem(id: TabId.home, icon: LucideIcons.house_heart, label: '大厅', page: HomePage()),
+    _TabItem(id: TabId.music, icon: LucideIcons.disc_3, label: '音乐', page: _PlaceholderPage('音乐')),
+    _TabItem(id: TabId.mailbox, icon: LucideIcons.book_open, label: '信箱', page: DailyPage()),
+    _TabItem(id: TabId.profile, icon: LucideIcons.user, label: '盒子', page: ProfilePage()),
   ];
 
-  /// 切换到指定 tab。既供底部导航点击用,也通过 TabSwitcher 暴露给深层组件。
-  void _switchTo(int index) {
+  /// 按身份切换 tab(供 TabSwitcher 暴露给深层组件)。
+  void _switchToId(TabId id) {
+    final index = _tabs.indexWhere((t) => t.id == id);
+    if (index != -1) _switchToIndex(index);
+  }
+
+  /// 按索引切换 tab(供底部导航点击用)。
+  void _switchToIndex(int index) {
     if (index == _currentIndex) return;
     setState(() => _currentIndex = index);
   }
@@ -44,9 +51,9 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     // TabSwitcher:把"切 tab"能力下发给整棵子树,
-    // 深层组件(如今日信箱卡)可 TabSwitcher.of(context).switchTo(index) 调用。
+    // 深层组件(如今日信箱卡)可 TabSwitcher.of(context).switchTo(TabId.mailbox) 调用。
     return TabSwitcher(
-      switchTo: _switchTo,
+      switchTo: _switchToId,
       child: Scaffold(
         // AnimatedSwitcher:child 一变就用淡入淡出在新旧页间过渡。
         // KeyedSubtree + ValueKey(_currentIndex):key 变化让 AnimatedSwitcher
@@ -55,7 +62,7 @@ class _HomeShellState extends State<HomeShell> {
           duration: const Duration(milliseconds: 300),
           child: KeyedSubtree(
             key: ValueKey(_currentIndex),
-            child: _pages[_currentIndex],
+            child: _tabs[_currentIndex].page,
           ),
         ),
 
@@ -104,28 +111,11 @@ class _HomeShellState extends State<HomeShell> {
               child: NavigationBar(
                 selectedIndex: _currentIndex,
                 // 点击某个 tab → 切换(触发淡入淡出)。
-                onDestinationSelected: _switchTo,
-                destinations: const [
-                  NavigationDestination(
-                    icon: Icon(LucideIcons.house_heart),
-                    label: '首页',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(LucideIcons.disc_3),
-                    label: '音乐',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(LucideIcons.ticket),
-                    label: '巡演',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(LucideIcons.book_open),
-                    label: '每日',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(LucideIcons.user),
-                    label: '我的',
-                  ),
+                onDestinationSelected: _switchToIndex,
+                // 导航项由 tab 配置生成,与页面顺序天然一致。
+                destinations: [
+                  for (final tab in _tabs)
+                    NavigationDestination(icon: Icon(tab.icon), label: tab.label),
                 ],
               ),
             ),
@@ -134,6 +124,21 @@ class _HomeShellState extends State<HomeShell> {
       ),
     );
   }
+}
+
+/// 单个 tab 的配置:身份 + 图标 + 标签 + 对应页面。
+class _TabItem {
+  const _TabItem({
+    required this.id,
+    required this.icon,
+    required this.label,
+    required this.page,
+  });
+
+  final TabId id;
+  final IconData icon;
+  final String label;
+  final Widget page;
 }
 
 /// tab 占位页:屏幕居中显示标题。后续逐个替换成真内容。

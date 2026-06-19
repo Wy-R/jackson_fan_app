@@ -6,6 +6,8 @@
 	<true/>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>用于保存每日一言卡片到您的相册</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>用于获取你所在位置的天气</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

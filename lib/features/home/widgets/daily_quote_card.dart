@@ -13,9 +13,6 @@ const dailyContent = [
   'I just wanted you near me.',
 ];
 
-/// 底部导航中「每日」tab 的索引(首页0/音乐1/巡演2/每日3/我的4)。
-const _dailyTabIndex = 3;
-
 /// 今日一言悬浮卡:顶部浮动的引文卡片(毛玻璃效果)。
 ///
 /// 进场动画交给可复用的 [EntranceAnimation](延迟 + 上滑 + 淡入),
@@ -30,7 +27,7 @@ class DailyQuoteCard extends StatelessWidget {
       // behavior.opaque 让透明区域(毛玻璃半透明处)也能响应点击。
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => TabSwitcher.of(context).switchTo(_dailyTabIndex),
+        onTap: () => TabSwitcher.of(context).switchTo(TabId.mailbox),
         child: _buildCard(context),
       ),
     );
@@ -92,7 +89,7 @@ class DailyQuoteCard extends StatelessWidget {
               Text(
                 '---- Magic MAN · 2022',
                 style: TextStyle(
-                  fontFamily: 'Barlow Condensed',
+                  // fontFamily: 'Barlow Condensed',
                   fontSize: 9,
                   color: AppColors.primary,
                   fontWeight: FontWeight.w400,
