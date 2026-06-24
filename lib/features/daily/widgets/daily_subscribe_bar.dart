@@ -15,7 +15,7 @@ class DailySubscribeBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.card,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.border, width: 0.5),
       ),
       child: Row(
         children: [

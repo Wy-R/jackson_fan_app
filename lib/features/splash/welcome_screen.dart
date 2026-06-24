@@ -67,32 +67,51 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           fit: StackFit.expand,
           children: [
             // ===== 第 1 层:背景图(最底层)=====
-            // Image.asset 加载打包进 App 的本地图片,
-            // 路径就是 pubspec.yaml 里声明过的 assets 路径。
-            AnimatedScale(
-              scale: _showIntro ? 1.08 : 1,
-              duration: const Duration(seconds: 5),
-              curve: Curves.easeOutCubic,
-              child: Image.asset(
-                'assets/images/04.jpg',
-                // BoxFit.cover:等比缩放图片直到铺满整个区域,超出部分裁掉,
-                // 不会变形。做全屏背景几乎都用 cover。
-                // (对比 contain 是完整显示可能留白,fill 是拉伸会变形)
-                fit: BoxFit.cover,
-              ),
-            ),
+            // Image.asset(
+            //   'assets/images/04.jpg',
+            //   fit: BoxFit.cover,
+            // ),
 
             // ===== 第 2 层:渐变遮罩 =====
-            // 盖在图上的一层半透明黑色渐变,让底部的白色按钮更清晰,
-            // 否则碰上浅色背景图按钮会看不清。
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                // LinearGradient 线性渐变:从中间的全透明,过渡到底部的半透明黑。
-                gradient: LinearGradient(
-                  begin: Alignment.center, // 渐变起点:垂直中间
-                  end: Alignment.bottomCenter, // 渐变终点:底部
-                  colors: [Colors.transparent, Colors.black54], // 透明 → 半透明黑
-                ),
+            // const DecoratedBox(
+            //   decoration: BoxDecoration(
+            //     gradient: LinearGradient(
+            //       begin: Alignment.center,
+            //       end: Alignment.bottomCenter,
+            //       colors: [Colors.transparent, Colors.black54],
+            //     ),
+            //   ),
+            // ),
+
+
+            // ===== slogan(屏幕居中,静态显示)=====
+            // 独立的一层:Stack 里再加一个 Align 居中,放两行字。
+            // 多行文字用 Column(多子) 承载,Align 只能有一个 child,
+            // 所以先 Align → Column → 两个 Text。
+            Align(
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // 只占内容高度
+                children: const [
+                  Text(
+                    'WELCOME TO OUR WORLD',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  SizedBox(height: 8), // 两行之间的间距
+                  Text(
+                    'A QUIET SPACE FOR US',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
               ),
             ),
 

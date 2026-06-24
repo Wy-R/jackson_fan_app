@@ -8,9 +8,11 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/models/daily_quote.dart';
 import '../../../core/services/asset_data_service.dart';
+import '../../../core/services/favorites_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/widget_capture.dart';
+import '../../../core/widgets/section_title.dart';
 
 /// 每日一言轮播模块:异步加载数据 → 渲染标题区 + 可切换卡片 + 操作区。
 ///
@@ -67,15 +69,72 @@ class _SwiperViewState extends State<_SwiperView> {
   /// 标记卡片截图区域(放在 AnimatedSwitcher 外层,始终指向当前卡)。
   final _cardKey = GlobalKey();
 
+  /// 当前卡片是否已收藏。
+  bool _isFavorited = false;
+
+  static const _favoritesService = FavoritesService();
+
   bool get _canPrev => _index > 0;
   bool get _canNext => _index < widget.quotes.length - 1;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkFavorite();
+  }
+
+  /// 检查当前卡片是否已收藏。
+  Future<void> _checkFavorite() async {
+    final source = widget.quotes[_index].source;
+    final fav = await _favoritesService.isFavorited(source);
+    if (mounted) setState(() => _isFavorited = fav);
+  }
+
+  /// 切换收藏状态：已收藏则取消，未收藏则截图保存。
+  Future<void> _toggleFavorite() async {
+    final quote = widget.quotes[_index];
+
+    if (_isFavorited) {
+      // 取消收藏
+      final fav = await _favoritesService.findBySource(quote.source);
+      if (fav != null) {
+        await _favoritesService.remove(fav.id);
+      }
+      if (mounted) {
+        setState(() => _isFavorited = false);
+        _toast('已取消收藏');
+      }
+    } else {
+      // 截图并收藏
+      final bytes = await captureBoundaryToPng(_cardKey);
+      if (bytes == null) {
+        _toast('收藏失败,请重试');
+        return;
+      }
+      await _favoritesService.save(
+        imageBytes: bytes,
+        source: quote.source,
+        lines: quote.lines,
+      );
+      if (mounted) {
+        setState(() => _isFavorited = true);
+        _toast('已收藏');
+      }
+    }
+  }
+
   void _prev() {
-    if (_canPrev) setState(() => _index--);
+    if (_canPrev) {
+      setState(() => _index--);
+      _checkFavorite();
+    }
   }
 
   void _next() {
-    if (_canNext) setState(() => _index++);
+    if (_canNext) {
+      setState(() => _index++);
+      _checkFavorite();
+    }
   }
 
   /// 截取当前卡片为图片并调起系统分享。失败时给出提示。
@@ -177,10 +236,12 @@ class _SwiperViewState extends State<_SwiperView> {
           child: _ActionBar(
             canPrev: _canPrev,
             canNext: _canNext,
+            isFavorited: _isFavorited,
             onPrev: _prev,
             onNext: _next,
             onShare: _share,
             onDownload: _download,
+            onToggleFavorite: _toggleFavorite,
           ),
         ),
       ],
@@ -201,33 +262,7 @@ class _TitleBar extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'DAILY DROP',
-              style: TextStyle(
-                fontFamily: 'Barlow Condensed',
-                color: AppColors.accent,
-                fontSize: 10,
-                letterSpacing: 6,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              '今日信箱',
-              style: TextStyle(
-                fontFamily: 'Anton',
-                fontWeight: FontWeight.w700,
-                color: AppColors.foreground,
-                fontSize: 25,
-                height: 1.0,
-              ),
-            ),
-          ],
-        ),
+        const SectionTitle(eyebrow: 'DAILY DROP', title: '每日一言'),
         Text(
           '$current / $total',
           style: TextStyle(
@@ -254,8 +289,10 @@ class _QuoteCard extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // 背景图
-          Image.asset(quote.background, fit: BoxFit.cover),
+          // 背景图(支持网络 URL 和本地资源)
+          quote.background.startsWith('http')
+              ? Image.network(quote.background, fit: BoxFit.cover)
+              : Image.asset(quote.background, fit: BoxFit.cover),
           // 底部渐变遮罩,保证文字清晰
           DecoratedBox(
             decoration: BoxDecoration(
@@ -283,7 +320,7 @@ class _QuoteCard extends StatelessWidget {
                       children: [
                         Icon(LucideIcons.dot, color: AppColors.primary, size: 14),
                         Text(
-                          'LYRICS',
+                          'DROPS',
                           style: TextStyle(
                             fontFamily: 'Barlow Condensed',
                             color: AppColors.foreground,
@@ -362,18 +399,22 @@ class _ActionBar extends StatelessWidget {
   const _ActionBar({
     required this.canPrev,
     required this.canNext,
+    required this.isFavorited,
     required this.onPrev,
     required this.onNext,
     required this.onShare,
     required this.onDownload,
+    required this.onToggleFavorite,
   });
 
   final bool canPrev;
   final bool canNext;
+  final bool isFavorited;
   final VoidCallback onPrev;
   final VoidCallback onNext;
   final VoidCallback onShare;
   final VoidCallback onDownload;
+  final VoidCallback onToggleFavorite;
 
   @override
   Widget build(BuildContext context) {
@@ -386,7 +427,12 @@ class _ActionBar extends StatelessWidget {
           onTap: onPrev,
         ),
         const SizedBox(width: 12),
-        _CircleButton(icon: LucideIcons.heart, onTap: () {}),
+        // 收藏按钮:已收藏时填充主色
+        _CircleButton(
+          icon: isFavorited ? LucideIcons.heart : LucideIcons.heart,
+          highlight: isFavorited,
+          onTap: onToggleFavorite,
+        ),
         const SizedBox(width: 12),
         Expanded(child: _DownloadButton(onTap: onDownload)),
         const SizedBox(width: 12),
@@ -441,7 +487,7 @@ class _SquareButton extends StatelessWidget {
       child: Container(
         width: 48,
         height: 48,
-        decoration: BoxDecoration(border: Border.all(color: borderColor)),
+        decoration: BoxDecoration(border: Border.all(color: borderColor, width: 0.5)),
         child: Icon(icon, color: iconColor, size: 20),
       ),
     );
@@ -449,11 +495,17 @@ class _SquareButton extends StatelessWidget {
 }
 
 /// 圆形描边按钮(收藏/分享)。
+/// - highlight:主色填充+主色图标(用于已收藏状态)
 class _CircleButton extends StatelessWidget {
-  const _CircleButton({required this.icon, required this.onTap});
+  const _CircleButton({
+    required this.icon,
+    required this.onTap,
+    this.highlight = false,
+  });
 
   final IconData icon;
   final VoidCallback onTap;
+  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
@@ -464,9 +516,17 @@ class _CircleButton extends StatelessWidget {
         height: 48,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border),
+          color: highlight ? AppColors.destructive : Colors.transparent,
+          border: Border.all(
+            color: highlight ? AppColors.destructive : AppColors.border,
+            width: 0.5,
+          ),
         ),
-        child: Icon(icon, color: AppColors.mutedForeground, size: 20),
+        child: Icon(
+          icon,
+          color: highlight ? AppColors.destructiveForeground : AppColors.mutedForeground,
+          size: 20,
+        ),
       ),
     );
   }

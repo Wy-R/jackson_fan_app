@@ -104,7 +104,7 @@ class HeroHeader extends StatelessWidget {
             height: 40,
             color: AppColors.primary, // 黄色实心底
             child: Marquee(
-              text: '这是一条跑马灯的通告I》制作中，敬请期待',
+              text: '这是一个正在制作中的 APP',
               // 黄底配深色字:primaryForeground 是主题里专门搭 primary 的前景色
               style: TextStyle(color: AppColors.primaryForeground),
               blankSpace: 40, // 一段文字结束到下一段开始的间隔

@@ -6,6 +6,7 @@ import 'package:jackson_fan_app/core/widgets/tab_switcher.dart';
 import '../daily/daily_page.dart';
 import '../home/home_page.dart';
 import '../profile/profile_page.dart';
+import '../treehole/treehole_page.dart';
 
 /// 导航壳:承载底部导航栏 + 5 个 tab 页面的外层容器。
 ///
@@ -32,7 +33,8 @@ class _HomeShellState extends State<HomeShell> {
   static const _tabs = <_TabItem>[
     _TabItem(id: TabId.home, icon: LucideIcons.house_heart, label: '大厅', page: HomePage()),
     _TabItem(id: TabId.music, icon: LucideIcons.disc_3, label: '音乐', page: _PlaceholderPage('音乐')),
-    _TabItem(id: TabId.mailbox, icon: LucideIcons.book_open, label: '信箱', page: DailyPage()),
+    _TabItem(id: TabId.treehole, icon: LucideIcons.message_square, label: '树洞', page: TreeholePage()),
+    _TabItem(id: TabId.daily, icon: LucideIcons.book_open, label: '每日', page: DailyPage()),
     _TabItem(id: TabId.profile, icon: LucideIcons.user, label: '盒子', page: ProfilePage()),
   ];
 
@@ -51,7 +53,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     // TabSwitcher:把"切 tab"能力下发给整棵子树,
-    // 深层组件(如今日信箱卡)可 TabSwitcher.of(context).switchTo(TabId.mailbox) 调用。
+    // 深层组件(如今日语录卡)可 TabSwitcher.of(context).switchTo(TabId.daily) 调用。
     return TabSwitcher(
       switchTo: _switchToId,
       child: Scaffold(
@@ -69,7 +71,7 @@ class _HomeShellState extends State<HomeShell> {
         // NavigationBarTheme 局部覆盖主题,实现"深色底 + 黄高亮"。
         bottomNavigationBar: DecoratedBox(
           decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: AppColors.primary)),
+            border: Border(top: BorderSide(color: AppColors.border)),
           ),
           // 包一层 Theme 关掉点击水波纹/高亮:
           // splashFactory = NoSplash 去掉按下扩散的椭圆,

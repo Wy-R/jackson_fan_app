@@ -2,14 +2,14 @@ import 'package:flutter/widgets.dart';
 
 /// 底部 tab 的稳定身份标识。
 ///
-/// 用枚举而非数字索引来指代 tab:这样组件说「去信箱」(TabId.mailbox)而非
+/// 用枚举而非数字索引来指代 tab:这样组件说「去每日」(TabId.daily)而非
 /// 「去第 2 个」,即使将来 tab 增删/调序,语义不变、也不会错位。
-enum TabId { home, music, mailbox, profile }
+enum TabId { home, music, treehole, daily, profile }
 
 /// 底部 tab 切换能力的「抽象入口」。
 ///
 /// 把「切换到哪个 tab」这个**动作**从具体实现里解耦出来:
-/// - 深层组件只需 `TabSwitcher.of(context).switchTo(TabId.mailbox)`,
+/// - 深层组件只需 `TabSwitcher.of(context).switchTo(TabId.daily)`,
 ///   不关心底层是 setState、状态管理还是路由,也不关心它是第几个。
 /// - 将来若迁移到 GoRouter 等,只改 HomeShell 里传入的实现,
 ///   所有调用处一行都不用动。

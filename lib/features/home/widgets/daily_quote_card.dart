@@ -27,7 +27,7 @@ class DailyQuoteCard extends StatelessWidget {
       // behavior.opaque 让透明区域(毛玻璃半透明处)也能响应点击。
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => TabSwitcher.of(context).switchTo(TabId.mailbox),
+        onTap: () => TabSwitcher.of(context).switchTo(TabId.daily),
         child: _buildCard(context),
       ),
     );
@@ -46,7 +46,7 @@ class DailyQuoteCard extends StatelessWidget {
           decoration: BoxDecoration(
             // rgba(8,8,8,0.55):背景色 background 叠 0.55 透明度
             color: AppColors.background.withValues(alpha: 0.55),
-            border: Border.all(color: AppColors.primary, width: 0.5),
+            border: Border.all(color: AppColors.border, width: 0.5),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,7 +60,7 @@ class DailyQuoteCard extends StatelessWidget {
                     children: [
                       Icon(LucideIcons.dot, color: AppColors.primary, size: 9),
                       Text(
-                        '今日信箱',
+                        '每日一言',
                         style: TextStyle(color: AppColors.primary, fontSize: 9),
                       ),
                     ],

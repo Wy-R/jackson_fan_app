@@ -26,4 +26,11 @@ class DailyQuote {
       source: json['source'] as String,
     );
   }
+
+  /// 序列化为 JSON(收藏时保存元数据用)。
+  Map<String, dynamic> toJson() => {
+        'background': background,
+        'lines': lines,
+        'source': source,
+      };
 }
