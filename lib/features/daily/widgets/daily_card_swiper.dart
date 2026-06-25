@@ -5,10 +5,11 @@ import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
 import '../../../core/models/daily_quote.dart';
-import '../../../core/services/asset_data_service.dart';
 import '../../../core/services/favorites_service.dart';
+import '../../../core/stores/quotes_store.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/widget_capture.dart';
@@ -26,29 +27,17 @@ class DailyCardSwiper extends StatefulWidget {
 }
 
 class _DailyCardSwiperState extends State<DailyCardSwiper> {
-  // 在 initState 取一次 Future,避免每次 build 重新发起加载。
-  late final Future<List<DailyQuote>> _quotesFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _quotesFuture = const AssetDataService().loadDailyQuotes();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<DailyQuote>>(
-      future: _quotesFuture,
-      builder: (context, snapshot) {
-        // 加载中 / 无数据:先占位
-        if (!snapshot.hasData) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          );
-        }
-        return _SwiperView(quotes: snapshot.data!);
-      },
-    );
+    return Watch((context) {
+      final quotes = QuotesStore.instance.quotes.value;
+      if (quotes.isEmpty) {
+        return const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        );
+      }
+      return _SwiperView(quotes: quotes);
+    });
   }
 }
 

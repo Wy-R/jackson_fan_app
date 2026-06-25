@@ -2,16 +2,13 @@ import 'dart:ui';
 
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter/material.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
+import '../../../core/stores/quotes_store.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../core/widgets/entrance_animation.dart';
 import '../../../core/widgets/tab_switcher.dart';
-
-const dailyContent = [
-  'I never needed you to love me',
-  'I just wanted you near me.',
-];
 
 /// 今日一言悬浮卡:顶部浮动的引文卡片(毛玻璃效果)。
 ///
@@ -28,13 +25,23 @@ class DailyQuoteCard extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => TabSwitcher.of(context).switchTo(TabId.daily),
-        child: _buildCard(context),
+        child: Watch((context) => _buildCard(context)),
       ),
     );
   }
 
   /// 卡片本体(毛玻璃外框 + 内容)。
   Widget _buildCard(BuildContext context) {
+    final store = QuotesStore.instance;
+    // 读取默认语录，没加载完时用兜底文案
+    final quote = store.defaultQuote.value;
+
+    final lines = quote?.lines ?? [
+      'I never needed you to love me,',
+      'I just wanted you near me.',
+    ];
+    final source = quote?.source ?? 'MAGIC MAN · 2022';
+
     // ClipRect 把模糊裁在卡片矩形范围内(无圆角,所以用 ClipRect 而非 ClipRRect)。
     // BackdropFilter 对其"身后"的像素做高斯模糊,实现毛玻璃。
     return ClipRect(
@@ -84,10 +91,10 @@ class DailyQuoteCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               // 逐行渲染引文,直接摊进外层 Column,无需多套一层
-              for (final line in dailyContent) _DailyQuote(text: line),
+              for (final line in lines) _DailyQuote(text: line),
               const SizedBox(height: 12),
               Text(
-                '---- Magic MAN · 2022',
+                '---- $source',
                 style: TextStyle(
                   // fontFamily: 'Barlow Condensed',
                   fontSize: 9,

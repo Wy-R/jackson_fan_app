@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
+import '../../../core/stores/quotes_store.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../sky/widgets/sky_entry.dart';
 import '../../sky/widgets/sky_sheet.dart';
 import 'artist_name_section.dart';
 import 'daily_quote_card.dart';
+
 
 /// 首页顶部的人物背景大图区:背景图 + 渐变遮罩 + 左下角文字。
 ///
@@ -16,19 +19,33 @@ import 'daily_quote_card.dart';
 class HeroHeader extends StatelessWidget {
   const HeroHeader({super.key});
 
+  /// 根据背景路径构建图片，支持网络 URL 和本地资源。
+  Widget _buildBackground(String? background) {
+    if (background != null && background.startsWith('http')) {
+      return Image.network(
+        background,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => Image.asset('assets/images/bg.jpeg', fit: BoxFit.cover),
+      );
+    }
+    return Image.asset(
+      background ?? 'assets/images/bg.jpeg',
+      fit: BoxFit.cover,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // watch 让 widget 自动响应 defaultQuote 的变化
+    final defaultQuote = QuotesStore.instance.defaultQuote.watch(context);
+
     // Stack(fit: expand) 撑满父给的空间(整个 body),实现全屏背景,
     // 不设固定高度,从而自适应任何屏幕尺寸。
     return Stack(
       fit: StackFit.expand,
       children: [
         // 背景图,铺满整个区域
-        Image.asset(
-          'assets/images/bg.jpeg',
-          // cover:等比缩放铺满 + 裁切,不变形
-          fit: BoxFit.cover,
-        ),
+        _buildBackground(defaultQuote?.background),
 
         // 底部渐变遮罩:从透明过渡到半透明深色,
         // 让左下角文字在任何图上都清晰(手法同开屏页)。

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/stores/quotes_store.dart';
 import '../shell/home_shell.dart';
 
 /// 开屏欢迎页:全屏背景图 + enter 按钮,点击后进入首页。
@@ -26,6 +27,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       if (!mounted) return;
       setState(() => _showIntro = true);
     });
+
+    // 预加载语录数据，进入首页时已有数据可用
+    QuotesStore.instance.load();
   }
 
   /// 点击 enter 后的跳转逻辑,单独抽成方法,build 里更清爽。

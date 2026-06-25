@@ -40,16 +40,20 @@ class AssetDataService {
     return [];
   }
 
-  /// 每日一言列表。
+  /// 加载 quotesDefault + quotes，供全局 store 使用。
   ///
-  /// 优先读缓存（1 小时内有效），否则拉远端 JSON。
-  /// 网络失败 / 解析失败时回退到内置兜底数据。
-  Future<List<DailyQuote>> loadDailyQuotes() async {
-    // 1. 尝试读缓存
-    final cached = await _readCache();
-    if (cached != null) {
-      print('[DailyQuotes] 命中缓存, ${cached.length} 条');
-      return cached;
+  /// 取数顺序:
+  /// 1. 命中未过期缓存 → 直接返回;
+  /// 2. 否则拉远端,成功则写缓存并返回;
+  /// 3. 网络/解析失败 → 回退到缓存(即使已过期);
+  /// 4. 仍无缓存 → 内置兜底数据。
+  Future<({DailyQuote? defaultQuote, List<DailyQuote> quotes})>
+      loadDefaultAndQuotes() async {
+    // 1. 命中未过期缓存
+    final fresh = await _readCache();
+    if (fresh != null) {
+      print('[DailyQuotes] 命中缓存, ${fresh.quotes.length} 条');
+      return fresh;
     }
 
     // 2. 拉远端
@@ -58,32 +62,42 @@ class AssetDataService {
           .get(Uri.parse(_dailyQuotesUrl))
           .timeout(const Duration(seconds: 8));
 
-      print('[DailyQuotes] HTTP ${res.statusCode}, body length: ${res.bodyBytes.length}');
+      print(
+          '[DailyQuotes] HTTP ${res.statusCode}, body length: ${res.bodyBytes.length}');
 
       if (res.statusCode == 200) {
         final decoded = json.decode(res.body) as Map<String, dynamic>;
+
+        // quotesDefault
+        final defaultList = decoded['quotesDefault'] as List?;
+        final defaultQuote = defaultList != null && defaultList.isNotEmpty
+            ? _parseQuote(defaultList.first as Map<String, dynamic>)
+            : null;
+
+        // quotes
         final list = (decoded['quotes'] ?? decoded['quotesDefault']) as List;
         final quotes = list
             .map((e) => _parseQuote(e as Map<String, dynamic>))
             .toList();
 
-        // print('[DailyQuotes] 解析成功, ${quotes.length} 条');
-        // for (final q in quotes) {
-        //   print('  → bg=${q.background}, lines=${q.lines}, source=${q.source}');
-        // }
-
-        // 写入缓存
-        await _writeCache(quotes);
-        return quotes;
+        await _writeCache(defaultQuote: defaultQuote, quotes: quotes);
+        return (defaultQuote: defaultQuote, quotes: quotes);
       }
     } catch (e, st) {
       print('[DailyQuotes] 拉取失败: $e');
       print(st);
     }
 
-    // 3. 兜底
+    // 3. 网络失败时回退到缓存(哪怕已过期)
+    final stale = await _readCache(ignoreExpiry: true);
+    if (stale != null) {
+      print('[DailyQuotes] 网络失败, 回退到过期缓存, ${stale.quotes.length} 条');
+      return stale;
+    }
+
+    // 4. 内置兜底
     print('[DailyQuotes] 使用兜底数据');
-    return _fallbackQuotes;
+    return (defaultQuote: _fallbackQuotes.first, quotes: _fallbackQuotes);
   }
 
   /// 把远端 JSON 解析为 DailyQuote。
@@ -102,31 +116,50 @@ class AssetDataService {
 
   // ---------- 缓存 ----------
 
-  Future<List<DailyQuote>?> _readCache() async {
+  /// 读取缓存的 defaultQuote + quotes。
+  ///
+  /// [ignoreExpiry] 为 true 时忽略 1 小时有效期(用于网络失败时的回退)。
+  /// 缓存缺失或解析失败返回 null。
+  Future<({DailyQuote? defaultQuote, List<DailyQuote> quotes})?> _readCache({
+    bool ignoreExpiry = false,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final timeMs = prefs.getInt(_cacheTimeKey);
       if (timeMs == null) return null;
 
-      final cachedAt = DateTime.fromMillisecondsSinceEpoch(timeMs);
-      if (DateTime.now().difference(cachedAt) > _cacheDuration) return null;
+      if (!ignoreExpiry) {
+        final cachedAt = DateTime.fromMillisecondsSinceEpoch(timeMs);
+        if (DateTime.now().difference(cachedAt) > _cacheDuration) return null;
+      }
 
       final jsonStr = prefs.getString(_cacheKey);
       if (jsonStr == null) return null;
 
-      final List<dynamic> list = json.decode(jsonStr) as List<dynamic>;
-      return list
+      final decoded = json.decode(jsonStr) as Map<String, dynamic>;
+      final quotes = (decoded['quotes'] as List)
           .map((e) => DailyQuote.fromJson(e as Map<String, dynamic>))
           .toList();
+      final defaultJson = decoded['defaultQuote'] as Map<String, dynamic>?;
+      final defaultQuote =
+          defaultJson != null ? DailyQuote.fromJson(defaultJson) : null;
+
+      return (defaultQuote: defaultQuote, quotes: quotes);
     } catch (_) {
       return null;
     }
   }
 
-  Future<void> _writeCache(List<DailyQuote> quotes) async {
+  Future<void> _writeCache({
+    required DailyQuote? defaultQuote,
+    required List<DailyQuote> quotes,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final jsonStr = json.encode(quotes.map((q) => q.toJson()).toList());
+      final jsonStr = json.encode({
+        'defaultQuote': defaultQuote?.toJson(),
+        'quotes': quotes.map((q) => q.toJson()).toList(),
+      });
       await prefs.setString(_cacheKey, jsonStr);
       await prefs.setInt(_cacheTimeKey, DateTime.now().millisecondsSinceEpoch);
     } catch (_) {

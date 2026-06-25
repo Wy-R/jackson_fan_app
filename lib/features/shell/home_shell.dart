@@ -5,6 +5,7 @@ import 'package:jackson_fan_app/core/widgets/tab_switcher.dart';
 
 import '../daily/daily_page.dart';
 import '../home/home_page.dart';
+import '../music/music_page.dart';
 import '../profile/profile_page.dart';
 import '../treehole/treehole_page.dart';
 
@@ -32,7 +33,7 @@ class _HomeShellState extends State<HomeShell> {
   /// 增删/调序 tab 只改这里一处,两边自动同步、永不错位。
   static const _tabs = <_TabItem>[
     _TabItem(id: TabId.home, icon: LucideIcons.house_heart, label: '大厅', page: HomePage()),
-    _TabItem(id: TabId.music, icon: LucideIcons.disc_3, label: '音乐', page: _PlaceholderPage('音乐')),
+    _TabItem(id: TabId.music, icon: LucideIcons.disc_3, label: '音乐', page: MusicPage()),
     _TabItem(id: TabId.treehole, icon: LucideIcons.message_square, label: '树洞', page: TreeholePage()),
     _TabItem(id: TabId.daily, icon: LucideIcons.book_open, label: '每日', page: DailyPage()),
     _TabItem(id: TabId.profile, icon: LucideIcons.user, label: '盒子', page: ProfilePage()),
@@ -141,20 +142,4 @@ class _TabItem {
   final IconData icon;
   final String label;
   final Widget page;
-}
-
-/// tab 占位页:屏幕居中显示标题。后续逐个替换成真内容。
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage(this.title);
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(title, style: Theme.of(context).textTheme.headlineMedium),
-      ),
-    );
-  }
 }

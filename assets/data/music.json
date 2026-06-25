@@ -1,0 +1,43 @@
+{
+  "periods": {
+    "morning": {
+      "label": "早晨",
+      "emoji": "🌅",
+      "description": "新的一天，先来点节奏",
+      "songs": [
+        { "title": "100 Ways", "cover": "https://your-cdn.com/covers/100ways.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "Blow", "cover": "https://your-cdn.com/covers/blow.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "DOPAMINE", "cover": "https://your-cdn.com/covers/dopamine.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "Should've Let Go", "cover": "https://your-cdn.com/covers/sholdvletgo.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "Cruel", "cover": "https://your-cdn.com/covers/cruel.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "GBAD", "cover": "https://your-cdn.com/covers/gbad.jpg", "url": "https://music.163.com/song?id=xxx" }
+      ]
+    },
+    "afternoon": {
+      "label": "午后",
+      "emoji": "🌤",
+      "description": "事情再多，耳机一戴都是我的节奏",
+      "songs": [
+        { "title": "Papillon", "cover": "https://your-cdn.com/covers/papillon.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "OKAY", "cover": "https://your-cdn.com/covers/okay.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "Fendiman", "cover": "https://your-cdn.com/covers/fendiman.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "Bullet To The Heart", "cover": "https://your-cdn.com/covers/bullet.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "Pretty Please", "cover": "https://your-cdn.com/covers/prettyplease.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "Different Game", "cover": "https://your-cdn.com/covers/differentgame.jpg", "url": "https://music.163.com/song?id=xxx" }
+      ]
+    },
+    "night": {
+      "label": "夜间",
+      "emoji": "🌙",
+      "description": "安静下来，让音乐代替语言",
+      "songs": [
+        { "title": "LMLY", "cover": "https://your-cdn.com/covers/lmly.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "The Moment", "cover": "https://your-cdn.com/covers/themoment.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "Drive You Home", "cover": "https://your-cdn.com/covers/driveyouhome.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "Dawn of Us", "cover": "https://your-cdn.com/covers/dawnofus.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "Champagne Cool", "cover": "https://your-cdn.com/covers/champagnecool.jpg", "url": "https://music.163.com/song?id=xxx" },
+        { "title": "Made Me A Man", "cover": "https://your-cdn.com/covers/mademeaman.jpg", "url": "https://music.163.com/song?id=xxx" }
+      ]
+    }
+  }
+}
